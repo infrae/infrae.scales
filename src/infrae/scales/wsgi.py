@@ -59,7 +59,6 @@ class ScalesMiddleware(object):
         self.default = Stats(parent, 'default', )
         self.stats = []
         for key, value in stats:
-            print key, value
             self.stats.append(Stats(parent, key, value))
 
     def find(self, path):
