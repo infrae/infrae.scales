@@ -71,8 +71,8 @@ class ScalesMiddleware(object):
                 return sub
         return self.default
 
-    @webob.dec.wsgify
-    def __call__(self, request):
+    def __call__(self, environ, start_response):
+        request = webob.Request(environ)
         if request.path_info.startswith(self.signature):
             query = request.GET.get('query')
             obj_type = request.GET.get('object_type')
@@ -93,6 +93,9 @@ class ScalesMiddleware(object):
                 output.write('</ul>')
             output.write('<h3>Timing</h3>')
             formats.htmlFormat(output, query=query)
+            start_response(
+                '200 Ok',
+                [('Content-Type', 'text/html; charset=UTF8')])
             return output.getvalue()
         scale = self.find(request.path_info)
         scale.requests.mark()
@@ -101,8 +104,10 @@ class ScalesMiddleware(object):
         result = scale.statuses(response.status_int)
         if result is not None:
             result.mark()
-        return response
-
+        start_response(
+            response.status,
+            [a for a in response.headers.iteritems()])
+        return response.app_iter
 
 def make_middleware(app, global_config, **config):
     if 'graphite_server' in config:
