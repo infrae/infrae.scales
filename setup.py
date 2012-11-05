@@ -37,6 +37,7 @@ setup(name='infrae.scales',
       install_requires=[
         'setuptools',
         'scales',
+        'objgraph',
         'WebOb',
         ],
       entry_points={

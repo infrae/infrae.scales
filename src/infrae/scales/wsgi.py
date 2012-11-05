@@ -4,7 +4,11 @@ from greplin import scales
 from greplin.scales import formats, graphite, meter
 import webob.dec
 import re
+import objgraph
+import cgi
 
+
+LINE = '<tr><td><a href="?object_type={0}">{0}</a></td><td>{1}</td></tr>'
 
 class ApplicationStats(object):
     status_ok = scales.SumAggregationStat('status_ok')
@@ -71,8 +75,23 @@ class ScalesMiddleware(object):
     def __call__(self, request):
         if request.path_info.startswith(self.signature):
             query = request.GET.get('query')
+            obj_type = request.GET.get('object_type')
             output = StringIO()
+            leaking = objgraph.get_leaking_objects()
             formats.htmlHeader(output, self.signature, request.host_url, query)
+            output.write('<h3>Memory usage</h3>')
+            output.write('<table>' + ''.join(
+                    map(lambda info: LINE.format(*info),
+                        objgraph.most_common_types(10, leaking))) +
+                         '</table>')
+            if obj_type:
+                output.write('<h3>Memory detail for %s</h3>' % obj_type)
+                output.write('<ul>')
+                for obj in leaking:
+                    if type(obj).__name__ == obj_type:
+                        output.write('<li>%s</li>' % cgi.escape(str(obj)))
+                output.write('</ul>')
+            output.write('<h3>Timing</h3>')
             formats.htmlFormat(output, query=query)
             return output.getvalue()
         scale = self.find(request.path_info)
