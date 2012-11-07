@@ -6,9 +6,12 @@ import webob.dec
 import re
 import objgraph
 import cgi
+import os
+import tempfile
 
+MEMORY_LINE = '<tr><td><a href="?object_type={0}">{0}</a></td><td>{1}</td></tr>'
+OBJECT_LINE = '<li><a href="?object_address={0}">{1}</a></li>'
 
-LINE = '<tr><td><a href="?object_type={0}">{0}</a></td><td>{1}</td></tr>'
 
 class ApplicationStats(object):
     status_ok = scales.SumAggregationStat('status_ok')
@@ -76,20 +79,35 @@ class ScalesMiddleware(object):
         if request.path_info.startswith(self.signature):
             query = request.GET.get('query')
             obj_type = request.GET.get('object_type')
+            obj_address = request.GET.get('object_address')
+            if obj_address:
+                # Create a graph for the object
+                leaking = [objgraph.at(int(obj_address))]
+                filename = tempfile.mktemp(suffix='.png')
+                objgraph.show_refs(leaking, filename=filename)
+                output = open(filename, 'r').read()
+                os.unlink(filename)
+                start_response(
+                    '200 Ok',
+                    [('Content-Type', 'image/png')])
+                return output
+
             output = StringIO()
             leaking = objgraph.get_leaking_objects()
             formats.htmlHeader(output, self.signature, request.host_url, query)
             output.write('<h3>Memory usage</h3>')
             output.write('<table>' + ''.join(
-                    map(lambda info: LINE.format(*info),
+                    map(lambda info: MEMORY_LINE.format(*info),
                         objgraph.most_common_types(10, leaking))) +
                          '</table>')
             if obj_type:
-                output.write('<h3>Memory detail for %s</h3>' % obj_type)
+                # Display detail about leaking objects of a given type.
+                output.write('<h4>Memory detail for %s</h4>' % obj_type)
                 output.write('<ul>')
                 for obj in leaking:
                     if type(obj).__name__ == obj_type:
-                        output.write('<li>%s</li>' % cgi.escape(str(obj)))
+                        output.write(OBJECT_LINE.format(
+                                id(obj), cgi.escape(str(obj))))
                 output.write('</ul>')
             output.write('<h3>Timing</h3>')
             formats.htmlFormat(output, query=query)
