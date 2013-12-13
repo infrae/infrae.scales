@@ -5,7 +5,7 @@
 from setuptools import setup, find_packages
 import os
 
-version = '1.0'
+version = '1.0dev'
 
 tests_require = [
     'infrae.testing',
@@ -13,7 +13,7 @@ tests_require = [
 
 setup(name='infrae.scales',
       version=version,
-      description="WSGI middleware for scales",
+      description="WSGI middleware for scales and memory debugging",
       long_description=open("README.txt").read() + "\n" +
                        open(os.path.join("docs", "HISTORY.txt")).read(),
       classifiers=[
@@ -27,7 +27,7 @@ setup(name='infrae.scales',
       keywords='zope2 wsgi silva infrae',
       author='Sylvain Viollon',
       author_email='info@infrae.com',
-      url='http://svn.infrae.com/infrae.scales/trunk',
+      url='https://github.com/infrae/infrae.scales',
       license='ZPL',
       package_dir={'': 'src'},
       packages=find_packages('src'),

@@ -2,7 +2,7 @@
 infrae.scales
 =============
 
-Middleware to collect statistics about HTTP requests.
+Middleware to collect statistics about HTTP requests and memory usage.
 
 Example, in your paster configuration::
 
@@ -14,7 +14,7 @@ Example, in your paster configuration::
   scales_resources = .*\+\+static\+\+
 
 Configuration options
----------------------
+=====================
 
 Those configuration options are usable inside paster configuration file.
 
@@ -29,3 +29,9 @@ Option started with ``scales_``
   regular expression will have its statics collected under this
   prefix. If no given prefixes is match, the statics will be collected
   under the ``default`` prefix.
+
+Code repository
+===============
+
+You can find the code of this extension in Git:
+https://github.com/infrae/infrae.scales
